@@ -1,4 +1,45 @@
 import numpy as np
+import pickle
+from sklearn import preprocessing
+
+
+def predict(df):
+    model = pickle.load(open("movie_score_predict.pkl", "rb"))
+
+    with open('country.pkl', 'rb') as f:
+        country_list = pickle.load(f)
+
+    with open('sound.pkl', 'rb') as f:
+        sound_list = pickle.load(f)
+
+    with open('kind.pkl', 'rb') as f:
+        kind_list = pickle.load(f)
+
+    with open('color.pkl', 'rb') as f:
+        color_list = pickle.load(f)
+
+    df['number_cast'] = df['cast_names'].apply(lambda s: len(s))
+    month_dict = {'Oct': 8, 'Dec': 12, 'Aug': 8, 'Jul': 7, 'Feb': 2, 'Nov': 11, 'Sep': 10, 'May': 5, 'Mar': 3, 'Jan': 1,
+                  'Jun': 6, 'Apr': 3}
+    df.month = df.month.map(month_dict).fillna(0)
+
+    le = preprocessing.LabelEncoder()
+    le.fit(country_list[0:-1])
+    df['country'] = le.transform(df['country'])
+
+    le.fit(kind_list[0:-1])
+    df['kind'] = le.transform(df['kind'])
+
+    le.fit(color_list[0:-1])
+    df['color_info'] = le.transform(df['color_info'])
+
+    le.fit(sound_list[0:-1])
+    df['sound_mix'] = le.transform(df['sound_mix'])
+    select_feature = ['runtime', 'kind', 'color_info', 'sound_mix', 'votes',
+                      'country', 'day', 'month', 'number_cast']
+    X = df[select_feature]
+    prediction = model.predict(X)
+    return prediction
 
 
 def split_text(s):
