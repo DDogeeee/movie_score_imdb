@@ -35,8 +35,29 @@ def predict(df):
 
     le.fit(sound_list[0:-1])
     df['sound_mix'] = le.transform(df['sound_mix'])
-    select_feature = ['runtime', 'kind', 'color_info', 'sound_mix', 'votes',
-                      'country', 'day', 'month', 'number_cast']
+
+    with open('cast_score_board.pkl', 'rb') as f:
+        cast_score_board = pickle.load(f)
+    with open('director_score_board.pkl', 'rb') as f:
+        director_score_board = pickle.load(f)
+
+    for i in df.index:
+        s = df['cast_ids'][i]
+        me, ma, mi = getScore(s, cast_score_board)
+        df.loc[i, 'cast_mean_score'] = me
+        df.loc[i, 'cast_max_score'] = ma
+        df.loc[i, 'cast_min_score'] = mi
+
+        s = df.loc[i, 'director_id']
+        me, ma, mi = getScore(s, director_score_board)
+        df.loc[i, 'director_mean_score'] = me
+        df.loc[i, 'director_max_score'] = ma
+        df.loc[i, 'director_min_score'] = mi
+
+    select_feature = ['runtime', 'kind', 'color_info', 'sound_mix','votes',
+                  'country', 'day', 'month', 'number_cast','cast_mean_score',
+                  'cast_min_score', 'cast_max_score', 'director_mean_score',
+                  'director_max_score', 'director_min_score']
     X = df[select_feature]
     prediction = model.predict(X)
     return prediction
